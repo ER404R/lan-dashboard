@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %}Feature Requests - LAN Dashboard{% endblock %}
+{% block content %}
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+    <h2>Feature Requests</h2>
+    <a href="/features/new" role="button">New Request</a>
+</div>
+
+{% if features %}
+<div class="overflow-auto">
+    <table>
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Author</th>
+                <th>Comments</th>
+                <th>Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for feature in features %}
+            <tr>
+                <td><a href="/features/{{ feature.id }}">{{ feature.title }}</a></td>
+                <td>{{ feature.user.username }}</td>
+                <td>{{ feature.comments | length }}</td>
+                <td>
+                    {% if feature.resolved %}
+                    <mark>Resolved</mark>
+                    {% else %}
+                    <ins>Open</ins>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% else %}
+<p>No feature requests yet. Be the first to create one!</p>
+{% endif %}
+
+{% endblock %}

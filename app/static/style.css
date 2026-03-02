@@ -1,0 +1,57 @@
+/* Custom overrides for LAN Dashboard */
+
+.game-search-results {
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+.game-search-results .game-result {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem;
+    border-bottom: 1px solid var(--pico-muted-border-color);
+}
+
+.game-search-results .game-result img {
+    width: 120px;
+    height: auto;
+    border-radius: 4px;
+}
+
+.game-search-results .game-result .game-info {
+    flex: 1;
+}
+
+.scoreboard-table img.game-thumb {
+    width: 80px;
+    height: auto;
+    border-radius: 4px;
+    vertical-align: middle;
+}
+
+.rating-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin: 0;
+}
+
+.rating-form select {
+    width: auto;
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+}
+
+.rating-form button {
+    margin: 0;
+    padding: 0.25rem 0.75rem;
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline;
+}

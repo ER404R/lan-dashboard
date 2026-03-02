@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}New Feature Request - LAN Dashboard{% endblock %}
+{% block content %}
+
+<article style="max-width:600px;margin:2rem auto">
+    <header><h2>New Feature Request</h2></header>
+
+    {% if not can_create %}
+    <p><mark>You already have {{ open_count }}/{{ max_requests }} open requests. Please wait for some to be resolved before creating new ones.</mark></p>
+    <a href="/features" role="button" class="secondary">Back to Feature Requests</a>
+    {% else %}
+    <p>You have {{ open_count }}/{{ max_requests }} open requests.</p>
+    <form method="post" action="/features">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" maxlength="200" required autofocus placeholder="Short summary of the feature">
+        <label for="description">Description</label>
+        <textarea id="description" name="description" rows="5" required placeholder="Describe the feature you'd like to see..."></textarea>
+        <div style="display:flex;gap:1rem">
+            <button type="submit">Submit</button>
+            <a href="/features" role="button" class="secondary outline">Cancel</a>
+        </div>
+    </form>
+    {% endif %}
+</article>
+
+{% endblock %}

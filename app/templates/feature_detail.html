@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}{{ feature.title }} - LAN Dashboard{% endblock %}
+{% block content %}
+
+<article>
+    <header>
+        <div style="display:flex;justify-content:space-between;align-items:center">
+            <h2 style="margin:0">{{ feature.title }}</h2>
+            {% if feature.resolved %}
+            <mark>Resolved</mark>
+            {% else %}
+            <ins>Open</ins>
+            {% endif %}
+        </div>
+        <small>by {{ feature.user.username }} &middot; {{ feature.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+    </header>
+    <p>{{ feature.description }}</p>
+
+    {% if user.is_admin %}
+    <footer style="display:flex;gap:1rem">
+        <form method="post" action="/features/{{ feature.id }}/resolve">
+            <button type="submit" class="outline">
+                {% if feature.resolved %}Reopen{% else %}Mark Resolved{% endif %}
+            </button>
+        </form>
+        <form method="post" action="/features/{{ feature.id }}/delete"
+              onsubmit="return confirm('Delete this feature request and all comments?')">
+            <button type="submit" class="secondary outline">Delete</button>
+        </form>
+    </footer>
+    {% endif %}
+</article>
+
+<hr>
+
+<h3>Comments ({{ comments | length }})</h3>
+
+{% if comments %}
+{% for comment in comments %}
+<article style="padding:0.75rem 1rem;margin-bottom:0.5rem">
+    <header style="padding:0;margin-bottom:0.5rem">
+        <strong>{{ comment.user.username }}</strong>
+        <small>&middot; {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+    </header>
+    <p style="margin:0">{{ comment.content }}</p>
+</article>
+{% endfor %}
+{% else %}
+<p>No comments yet.</p>
+{% endif %}
+
+<hr>
+
+<h4>Add a Comment</h4>
+<form method="post" action="/features/{{ feature.id }}/comment">
+    <textarea name="content" rows="3" required placeholder="Write a comment..."></textarea>
+    <button type="submit">Post Comment</button>
+</form>
+
+<p><a href="/features">&larr; Back to Feature Requests</a></p>
+
+{% endblock %}

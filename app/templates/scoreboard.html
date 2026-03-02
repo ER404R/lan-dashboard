@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Scoreboard - LAN Dashboard{% endblock %}
+{% block content %}
+
+<section>
+    <h2>Add a Game</h2>
+    <input type="search"
+           name="q"
+           placeholder="Search Steam for a game..."
+           hx-get="/games/search-steam"
+           hx-trigger="keyup changed delay:500ms"
+           hx-target="#search-results"
+           hx-indicator="#search-spinner">
+    <span id="search-spinner" class="htmx-indicator" aria-busy="true">Searching...</span>
+    <div id="search-results" class="game-search-results"></div>
+</section>
+
+<hr>
+
+<section>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+        <h2 style="margin:0">Scoreboard</h2>
+        <div>
+            {% if current_filter == "new" %}
+            <a href="/" role="button" class="outline secondary" style="margin:0">Show All</a>
+            {% else %}
+            <a href="/?filter=new" role="button" class="outline" style="margin:0">Show New Games Only</a>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if games_with_scores %}
+    <div class="overflow-auto" style="margin-top:1rem">
+        <table class="scoreboard-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Game</th>
+                    <th>Avg Score</th>
+                    <th>Ratings</th>
+                    <th>Owners</th>
+                    <th>Your Rating</th>
+                    <th>Ownership</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for game, avg_score, num_ratings, owner_count in games_with_scores %}
+                <tr>
+                    <td>
+                        {% if game.thumbnail_url %}
+                        <img src="{{ game.thumbnail_url }}" alt="{{ game.name }}" class="game-thumb">
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ game.steam_url }}" target="_blank" rel="noopener">{{ game.name }}</a>
+                        {% if owner_count < 2 %}
+                        <sup style="color:var(--pico-ins-color);font-weight:bold">NEW</sup>
+                        {% endif %}
+                    </td>
+                    <td>{{ "%.1f"|format(avg_score) }}</td>
+                    <td>{{ num_ratings }}</td>
+                    <td>{{ owner_count }}</td>
+                    <td>
+                        <form method="post" action="/games/{{ game.id }}/rate" class="rating-form">
+                            <select name="value">
+                                <option value="" disabled {% if game.id not in user_scores %}selected{% endif %}>--</option>
+                                {% for i in range(11) %}
+                                <option value="{{ i }}" {% if user_scores.get(game.id) == i %}selected{% endif %}>{{ i }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="outline">Rate</button>
+                        </form>
+                    </td>
+                    <td>
+                        <form method="post" action="/games/{{ game.id }}/ownership" class="rating-form">
+                            <select name="status">
+                                <option value="none" {% if game.id not in user_ownership %}selected{% endif %}>--</option>
+                                <option value="owned" {% if user_ownership.get(game.id) == "owned" %}selected{% endif %}>Own</option>
+                                <option value="want" {% if user_ownership.get(game.id) == "want" %}selected{% endif %}>Want</option>
+                            </select>
+                            <button type="submit" class="outline">Set</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>{% if current_filter == "new" %}No new games found. <a href="/">Show all games.</a>{% else %}No games yet. Search Steam above to add one!{% endif %}</p>
+    {% endif %}
+</section>
+
+{% endblock %}

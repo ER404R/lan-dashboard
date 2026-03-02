@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Login - LAN Dashboard{% endblock %}
+{% block content %}
+<article style="max-width:400px;margin:2rem auto">
+    <header><h2>Login</h2></header>
+    <form method="post" action="/login">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required autofocus>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+        <button type="submit">Login</button>
+    </form>
+    <p style="text-align:center"><a href="/register">Need an account? Register</a></p>
+</article>
+{% endblock %}

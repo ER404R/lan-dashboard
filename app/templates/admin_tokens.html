@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Admin - Invite Tokens{% endblock %}
+{% block content %}
+
+<h2>Invite Token Management</h2>
+
+<section>
+    <h3>Generate New Tokens</h3>
+    <form method="post" action="/admin/tokens/generate" style="display:flex;gap:1rem;align-items:end;flex-wrap:wrap">
+        <label>
+            How many?
+            <input type="number" name="count" value="1" min="1" max="50" style="width:100px">
+        </label>
+        <label>
+            Max uses (0 = unlimited)
+            <input type="number" name="max_uses" value="1" min="0" style="width:120px">
+        </label>
+        <button type="submit">Generate</button>
+    </form>
+</section>
+
+<hr>
+
+<section>
+    <h3>All Tokens</h3>
+    {% if tokens %}
+    <div class="overflow-auto">
+        <table>
+            <thead>
+                <tr>
+                    <th>Token</th>
+                    <th>Uses</th>
+                    <th>Status</th>
+                    <th>Created</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for token in tokens %}
+                <tr>
+                    <td><code>{{ token.token }}</code></td>
+                    <td>{{ token.use_count }} / {% if token.max_uses == 0 %}&infin;{% else %}{{ token.max_uses }}{% endif %}</td>
+                    <td>
+                        {% if token.status_label == "Revoked" %}
+                        <mark>Revoked</mark>
+                        {% elif token.status_label == "Exhausted" %}
+                        <mark>Exhausted</mark>
+                        {% else %}
+                        <ins>Available</ins>
+                        {% endif %}
+                    </td>
+                    <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>
+                        <form method="post" action="/admin/tokens/{{ token.id }}/revoke" style="margin:0">
+                            <button type="submit" class="outline secondary" style="margin:0;padding:0.25rem 0.5rem">
+                                {% if token.revoked %}Restore{% else %}Revoke{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p>No tokens yet.</p>
+    {% endif %}
+</section>
+
+{% endblock %}

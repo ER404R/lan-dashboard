@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}LAN Dashboard{% endblock %}</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <nav class="container">
+        <ul>
+            <li><strong><a href="/" class="contrast">LAN Dashboard</a></strong></li>
+        </ul>
+        <ul>
+            {% if user %}
+            <li><a href="/features">Features</a></li>
+            {% if user.is_admin %}
+            <li><a href="/admin/tokens">Tokens</a></li>
+            <li><a href="/admin/users">Users</a></li>
+            {% endif %}
+            <li>{{ user.username }}{% if user.is_admin %} <sup>admin</sup>{% endif %}</li>
+            <li>
+                <form method="post" action="/logout" style="margin:0">
+                    <button type="submit" class="secondary outline" style="margin:0;padding:0.25rem 0.75rem">Logout</button>
+                </form>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    <main class="container">
+        {% for msg in messages %}
+        <article style="padding:0.75rem 1rem;margin-bottom:1rem">{{ msg }}</article>
+        {% endfor %}
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{% if results %}
+{% for game in results %}
+<div class="game-result">
+    {% if game.thumbnail %}
+    <img src="{{ game.thumbnail }}" alt="{{ game.name }}">
+    {% endif %}
+    <div class="game-info">
+        <strong>{{ game.name }}</strong><br>
+        <small><a href="{{ game.store_url }}" target="_blank" rel="noopener">View on Steam</a></small>
+    </div>
+    <form method="post" action="/games/add">
+        <input type="hidden" name="steam_appid" value="{{ game.appid }}">
+        <input type="hidden" name="name" value="{{ game.name }}">
+        <input type="hidden" name="thumbnail_url" value="{{ game.thumbnail }}">
+        <input type="hidden" name="steam_url" value="{{ game.store_url }}">
+        <button type="submit" class="outline">Add</button>
+    </form>
+</div>
+{% endfor %}
+{% else %}
+<p>No games found.</p>
+{% endif %}
