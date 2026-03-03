@@ -140,6 +140,41 @@ async def add_game(
     return RedirectResponse("/", status_code=303)
 
 
+@router.post("/games/add-custom")
+async def add_custom_game(
+    request: Request,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+
+    form = await request.form()
+    name = form.get("name", "").strip()
+    thumbnail_url = form.get("thumbnail_url", "").strip() or None
+
+    if not name:
+        flash(request, "Game name is required.")
+        return RedirectResponse("/", status_code=303)
+
+    # Check if a custom game with the same name already exists
+    existing = db.query(Game).filter(Game.name == name, Game.steam_appid.is_(None)).first()
+    if existing:
+        flash(request, f"'{name}' is already on the scoreboard.")
+        return RedirectResponse("/", status_code=303)
+
+    game = Game(
+        name=name,
+        thumbnail_url=thumbnail_url,
+        added_by_id=user.id,
+    )
+    db.add(game)
+    db.commit()
+
+    flash(request, f"'{name}' added to the scoreboard!")
+    return RedirectResponse("/", status_code=303)
+
+
 @router.post("/games/{game_id}/rate")
 async def rate_game(
     game_id: int,

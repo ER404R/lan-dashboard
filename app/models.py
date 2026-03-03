@@ -22,10 +22,10 @@ class Game(Base):
     __tablename__ = "games"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    steam_appid: Mapped[int] = mapped_column(unique=True, index=True)
+    steam_appid: Mapped[int | None] = mapped_column(unique=True, index=True, nullable=True)
     name: Mapped[str] = mapped_column(String(255))
-    steam_url: Mapped[str] = mapped_column(String(512))
-    thumbnail_url: Mapped[str] = mapped_column(String(512))
+    steam_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
+    thumbnail_url: Mapped[str | None] = mapped_column(String(512), nullable=True)
     added_by_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 

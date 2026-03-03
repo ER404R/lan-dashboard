@@ -4,15 +4,35 @@
 
 <section>
     <h2>Add a Game</h2>
-    <input type="search"
-           name="q"
-           placeholder="Search Steam for a game..."
-           hx-get="/games/search-steam"
-           hx-trigger="keyup changed delay:500ms"
-           hx-target="#search-results"
-           hx-indicator="#search-spinner">
+    <div style="display:flex;gap:0.5rem;align-items:center">
+        <input type="search"
+               name="q"
+               placeholder="Search Steam for a game..."
+               hx-get="/games/search-steam"
+               hx-trigger="keyup changed delay:500ms"
+               hx-target="#search-results"
+               hx-indicator="#search-spinner"
+               style="margin:0">
+        <button class="outline" style="margin:0;white-space:nowrap" onclick="document.getElementById('custom-game-dialog').showModal()">Add Custom</button>
+    </div>
     <span id="search-spinner" class="htmx-indicator" aria-busy="true">Searching...</span>
     <div id="search-results" class="game-search-results"></div>
+
+    <dialog id="custom-game-dialog">
+        <article>
+            <header>
+                <button aria-label="Close" rel="prev" onclick="document.getElementById('custom-game-dialog').close()"></button>
+                <h3>Add a non-Steam game</h3>
+            </header>
+            <form method="post" action="/games/add-custom">
+                <label for="custom-name">Game name <span style="color:var(--pico-del-color)">*</span></label>
+                <input type="text" id="custom-name" name="name" placeholder="e.g. Minecraft" required>
+                <label for="custom-thumb">Image URL (optional)</label>
+                <input type="url" id="custom-thumb" name="thumbnail_url" placeholder="https://example.com/icon.png">
+                <button type="submit">Add Game</button>
+            </form>
+        </article>
+    </dialog>
 </section>
 
 <hr>
@@ -53,7 +73,11 @@
                         {% endif %}
                     </td>
                     <td>
+                        {% if game.steam_url %}
                         <a href="{{ game.steam_url }}" target="_blank" rel="noopener">{{ game.name }}</a>
+                        {% else %}
+                        {{ game.name }}
+                        {% endif %}
                         {% if owner_count < 2 %}
                         <sup style="color:var(--pico-ins-color);font-weight:bold">NEW</sup>
                         {% endif %}
