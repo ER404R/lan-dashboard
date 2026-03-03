@@ -22,29 +22,42 @@ async def scoreboard(
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    # Count owners per game (only status="owned")
-    owner_count_sub = (
-        sa_func.count(
-            case((GameOwnership.status == "owned", GameOwnership.id))
-        ).label("owner_count")
+    # Subqueries to avoid cross-product between Score and GameOwnership
+    score_sub = (
+        db.query(
+            Score.game_id,
+            sa_func.avg(Score.value).label("avg_score"),
+            sa_func.count(Score.id).label("num_ratings"),
+        )
+        .group_by(Score.game_id)
+        .subquery()
     )
 
-    # Get all games with average scores, rating count, and owner count
+    ownership_sub = (
+        db.query(
+            GameOwnership.game_id,
+            sa_func.count(case((GameOwnership.status == "owned", GameOwnership.id))).label("owner_count"),
+            sa_func.count(case((GameOwnership.status == "want", GameOwnership.id))).label("want_count"),
+        )
+        .group_by(GameOwnership.game_id)
+        .subquery()
+    )
+
     query = (
         db.query(
             Game,
-            sa_func.coalesce(sa_func.avg(Score.value), 0).label("avg_score"),
-            sa_func.count(sa_func.distinct(Score.id)).label("num_ratings"),
-            owner_count_sub,
+            sa_func.coalesce(score_sub.c.avg_score, 0).label("avg_score"),
+            sa_func.coalesce(score_sub.c.num_ratings, 0).label("num_ratings"),
+            sa_func.coalesce(ownership_sub.c.owner_count, 0).label("owner_count"),
+            sa_func.coalesce(ownership_sub.c.want_count, 0).label("want_count"),
         )
-        .outerjoin(Score)
-        .outerjoin(GameOwnership, Game.id == GameOwnership.game_id)
-        .group_by(Game.id)
-        .order_by(sa_func.avg(Score.value).desc().nulls_last())
+        .outerjoin(score_sub, Game.id == score_sub.c.game_id)
+        .outerjoin(ownership_sub, Game.id == ownership_sub.c.game_id)
+        .order_by(score_sub.c.avg_score.desc().nulls_last())
     )
 
     if filter == "new":
-        query = query.having(owner_count_sub < 2)
+        query = query.filter(sa_func.coalesce(ownership_sub.c.owner_count, 0) < 2)
 
     games_with_scores = query.all()
 

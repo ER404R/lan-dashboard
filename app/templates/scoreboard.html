@@ -38,13 +38,14 @@
                     <th>Game</th>
                     <th>Avg Score</th>
                     <th>Ratings</th>
-                    <th>Owners</th>
+                    <th>Own</th>
+                    <th>Want</th>
                     <th>Your Rating</th>
                     <th>Ownership</th>
                 </tr>
             </thead>
             <tbody>
-                {% for game, avg_score, num_ratings, owner_count in games_with_scores %}
+                {% for game, avg_score, num_ratings, owner_count, want_count in games_with_scores %}
                 <tr>
                     <td>
                         {% if game.thumbnail_url %}
@@ -60,6 +61,7 @@
                     <td>{{ "%.1f"|format(avg_score) }}</td>
                     <td>{{ num_ratings }}</td>
                     <td>{{ owner_count }}</td>
+                    <td>{{ want_count }}</td>
                     <td>
                         <form method="post" action="/games/{{ game.id }}/rate" class="rating-form">
                             <select name="value">
