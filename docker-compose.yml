@@ -1,9 +1,23 @@
 services:
   web:
-    build: .
-    ports:
-      - "8000:8000"
-    volumes:
-      - ./data:/app/data
+    image: ghcr.io/er404r/lan-dashboard:latest
     env_file:
       - .env
+    volumes:
+      - app-data:/app/data
+    expose:
+      - "8000"
+
+  nginx:
+    image: nginx:stable-alpine
+    depends_on:
+      - web
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - /etc/letsencrypt:/etc/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+
+volumes:
+  app-data:

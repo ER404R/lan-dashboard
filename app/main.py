@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
-from app.database import SessionLocal, create_tables
+from app.database import SessionLocal
 from app.limiter import limiter
 from app.models import InviteToken
 from app.routers import admin, auth_routes, feature_requests, scoreboard
@@ -18,7 +18,6 @@ BASE_DIR = Path(__file__).resolve().parent
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    create_tables()
     db = SessionLocal()
     try:
         # Seed regular invite tokens
