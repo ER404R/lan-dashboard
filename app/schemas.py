@@ -8,7 +8,7 @@ class LoginForm(BaseModel):
 
 class RegisterForm(BaseModel):
     username: str = Field(min_length=3, max_length=50)
-    password: str = Field(min_length=6)
+    password: str = Field(min_length=8)  # raised from 6 to 8 (Phase 4a)
     invite_token: str = Field(min_length=1)
 
 

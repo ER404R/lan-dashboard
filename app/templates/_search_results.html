@@ -9,6 +9,7 @@
         <small><a href="{{ game.store_url }}" target="_blank" rel="noopener">View on Steam</a></small>
     </div>
     <form method="post" action="/games/add">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <input type="hidden" name="steam_appid" value="{{ game.appid }}">
         <input type="hidden" name="name" value="{{ game.name }}">
         <input type="hidden" name="thumbnail_url" value="{{ game.thumbnail }}">

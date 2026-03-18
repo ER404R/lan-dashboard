@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import (
     flash,
     get_current_user,
@@ -17,6 +18,8 @@ router = APIRouter(prefix="/features")
 templates = Jinja2Templates(directory="app/templates")
 
 MAX_OPEN_REQUESTS_PER_USER = 3
+MAX_DESCRIPTION_LENGTH = 2000  # Phase 4b
+MAX_COMMENT_LENGTH = 1000      # Phase 4b
 
 
 @router.get("", response_class=HTMLResponse)
@@ -36,12 +39,13 @@ async def list_features(
     )
 
     return templates.TemplateResponse(
+        request,
         "features.html",
         {
-            "request": request,
             "user": user,
             "features": features,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
@@ -60,14 +64,15 @@ async def new_feature_form(
     can_create = open_count < MAX_OPEN_REQUESTS_PER_USER
 
     return templates.TemplateResponse(
+        request,
         "feature_new.html",
         {
-            "request": request,
             "user": user,
             "can_create": can_create,
             "open_count": open_count,
             "max_requests": MAX_OPEN_REQUESTS_PER_USER,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
@@ -77,6 +82,7 @@ async def create_feature(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_login(user, request)
     if redirect:
@@ -97,6 +103,11 @@ async def create_feature(
 
     if not description:
         flash(request, "Description is required.")
+        return RedirectResponse("/features/new", status_code=303)
+
+    # Phase 4b — enforce max description length
+    if len(description) > MAX_DESCRIPTION_LENGTH:
+        flash(request, f"Description must be at most {MAX_DESCRIPTION_LENGTH} characters.")
         return RedirectResponse("/features/new", status_code=303)
 
     feature = FeatureRequest(title=title, description=description, user_id=user.id)
@@ -131,13 +142,14 @@ async def feature_detail(
     )
 
     return templates.TemplateResponse(
+        request,
         "feature_detail.html",
         {
-            "request": request,
             "user": user,
             "feature": feature,
             "comments": comments,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
@@ -148,6 +160,7 @@ async def add_comment(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_login(user, request)
     if redirect:
@@ -165,6 +178,11 @@ async def add_comment(
         flash(request, "Comment cannot be empty.")
         return RedirectResponse(f"/features/{feature_id}", status_code=303)
 
+    # Phase 4b — enforce max comment length
+    if len(content) > MAX_COMMENT_LENGTH:
+        flash(request, f"Comment must be at most {MAX_COMMENT_LENGTH} characters.")
+        return RedirectResponse(f"/features/{feature_id}", status_code=303)
+
     comment = FeatureComment(
         feature_request_id=feature_id, user_id=user.id, content=content
     )
@@ -180,6 +198,7 @@ async def resolve_feature(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_admin(user, request)
     if redirect:
@@ -204,6 +223,7 @@ async def delete_feature(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_admin(user, request)
     if redirect:

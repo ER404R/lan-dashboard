@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.auth import hash_password, verify_password
 from app.config import settings
+from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import flash, get_current_user, get_db, get_flashed_messages
 from app.limiter import limiter
 from app.models import InviteToken, User
@@ -18,14 +19,22 @@ async def login_page(request: Request, user: User | None = Depends(get_current_u
     if user:
         return RedirectResponse("/", status_code=303)
     return templates.TemplateResponse(
+        request,
         "login.html",
-        {"request": request, "messages": get_flashed_messages(request)},
+        {
+            "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
+        },
     )
 
 
 @router.post("/login")
 @limiter.limit("5/minute")
-async def login(request: Request, db: Session = Depends(get_db)):
+async def login(
+    request: Request,
+    db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
+):
     form = await request.form()
     username = form.get("username", "").strip()
     password = form.get("password", "")
@@ -35,6 +44,8 @@ async def login(request: Request, db: Session = Depends(get_db)):
         flash(request, "Invalid username or password.")
         return RedirectResponse("/login", status_code=303)
 
+    # Phase 5 — session fixation prevention: clear old session before writing new identity
+    request.session.clear()
     request.session["user_id"] = user.id
     return RedirectResponse("/", status_code=303)
 
@@ -44,18 +55,23 @@ async def register_page(request: Request, user: User | None = Depends(get_curren
     if user:
         return RedirectResponse("/", status_code=303)
     return templates.TemplateResponse(
+        request,
         "register.html",
         {
-            "request": request,
             "registration_enabled": settings.REGISTRATION_ENABLED,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
 
 @router.post("/register")
 @limiter.limit("5/minute")
-async def register(request: Request, db: Session = Depends(get_db)):
+async def register(
+    request: Request,
+    db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
+):
     if not settings.REGISTRATION_ENABLED:
         flash(request, "Registration is currently closed.")
         return RedirectResponse("/register", status_code=303)
@@ -69,8 +85,9 @@ async def register(request: Request, db: Session = Depends(get_db)):
         flash(request, "Username must be at least 3 characters.")
         return RedirectResponse("/register", status_code=303)
 
-    if len(password) < 6:
-        flash(request, "Password must be at least 6 characters.")
+    # Phase 4a — raised minimum from 6 to 8
+    if len(password) < 8:
+        flash(request, "Password must be at least 8 characters.")
         return RedirectResponse("/register", status_code=303)
 
     # Check invite token
@@ -99,6 +116,9 @@ async def register(request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/logout")
-async def logout(request: Request):
+async def logout(
+    request: Request,
+    _csrf: None = Depends(verify_csrf_token),
+):
     request.session.clear()
     return RedirectResponse("/login", status_code=303)

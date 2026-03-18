@@ -23,6 +23,7 @@
             <li>{{ user.username }}{% if user.is_admin %} <sup>admin</sup>{% endif %}</li>
             <li>
                 <form method="post" action="/logout" style="margin:0">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                     <button type="submit" class="secondary outline" style="margin:0;padding:0.25rem 0.75rem">Logout</button>
                 </form>
             </li>

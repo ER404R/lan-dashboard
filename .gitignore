@@ -5,6 +5,10 @@ __pycache__/
 dist/
 build/
 .eggs/
+TASK.md
+CODEBASE.md
+plan.md
+auto_claude_state.json
 
 # Environment
 .env

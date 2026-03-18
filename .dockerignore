@@ -1,0 +1,37 @@
+# Secrets & local config
+.env
+*.env
+
+# Version control
+.git
+.gitignore
+.github
+
+# Python cache & venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.venv
+venv
+env
+
+# SQLite databases & data volume
+*.db
+*.db-shm
+*.db-wal
+data/
+
+# Tests (not needed in image)
+tests/
+requirements-dev.txt
+
+# Editor / OS artefacts
+.DS_Store
+*.swp
+*.swo
+.idea
+.vscode
+
+# Claude AI tooling
+.claude
