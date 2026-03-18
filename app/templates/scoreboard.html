@@ -120,4 +120,16 @@
     {% endif %}
 </section>
 
+<script>
+function updateSelectArrow(sel) {
+    const noValue = sel.value === '' || sel.value === 'none';
+    sel.classList.toggle('select--no-arrow', !noValue);
+}
+
+document.querySelectorAll('.rating-form select').forEach(function(sel) {
+    updateSelectArrow(sel);
+    sel.addEventListener('change', function() { updateSelectArrow(sel); });
+});
+</script>
+
 {% endblock %}
