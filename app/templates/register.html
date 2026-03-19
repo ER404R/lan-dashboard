@@ -7,10 +7,11 @@
     <p><mark>Registration is currently closed.</mark></p>
     {% else %}
     <form method="post" action="/register">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label for="username">Username</label>
         <input type="text" id="username" name="username" minlength="3" maxlength="50" required autofocus>
         <label for="password">Password</label>
-        <input type="password" id="password" name="password" minlength="6" required>
+        <input type="password" id="password" name="password" minlength="8" required>
         <label for="invite_token">Invite Token</label>
         <input type="text" id="invite_token" name="invite_token" required>
         <button type="submit">Register</button>

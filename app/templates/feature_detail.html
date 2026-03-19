@@ -19,12 +19,14 @@
     {% if user.is_admin %}
     <footer style="display:flex;gap:1rem">
         <form method="post" action="/features/{{ feature.id }}/resolve">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="outline">
                 {% if feature.resolved %}Reopen{% else %}Mark Resolved{% endif %}
             </button>
         </form>
         <form method="post" action="/features/{{ feature.id }}/delete"
               onsubmit="return confirm('Delete this feature request and all comments?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="secondary outline">Delete</button>
         </form>
     </footer>
@@ -53,7 +55,8 @@
 
 <h4>Add a Comment</h4>
 <form method="post" action="/features/{{ feature.id }}/comment">
-    <textarea name="content" rows="3" required placeholder="Write a comment..."></textarea>
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+    <textarea name="content" rows="3" required placeholder="Write a comment..." maxlength="1000"></textarea>
     <button type="submit">Post Comment</button>
 </form>
 

@@ -25,8 +25,9 @@
                 <h3>Add a non-Steam game</h3>
             </header>
             <form method="post" action="/games/add-custom">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                 <label for="custom-name">Game name <span style="color:var(--pico-del-color)">*</span></label>
-                <input type="text" id="custom-name" name="name" placeholder="e.g. Minecraft" required>
+                <input type="text" id="custom-name" name="name" placeholder="e.g. Minecraft" maxlength="255" required>
                 <label for="custom-thumb">Image URL (optional)</label>
                 <input type="url" id="custom-thumb" name="thumbnail_url" placeholder="https://example.com/icon.png">
                 <button type="submit">Add Game</button>
@@ -88,6 +89,7 @@
                     <td>{{ want_count }}</td>
                     <td>
                         <form method="post" action="/games/{{ game.id }}/rate" class="rating-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <select name="value">
                                 <option value="" disabled {% if game.id not in user_scores %}selected{% endif %}>--</option>
                                 {% for i in range(11) %}
@@ -99,6 +101,7 @@
                     </td>
                     <td>
                         <form method="post" action="/games/{{ game.id }}/ownership" class="rating-form">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
                             <select name="status">
                                 <option value="none" {% if game.id not in user_ownership %}selected{% endif %}>--</option>
                                 <option value="owned" {% if user_ownership.get(game.id) == "owned" %}selected{% endif %}>Own</option>
@@ -116,5 +119,17 @@
     <p>{% if current_filter == "new" %}No new games found. <a href="/">Show all games.</a>{% else %}No games yet. Search Steam above to add one!{% endif %}</p>
     {% endif %}
 </section>
+
+<script>
+function updateSelectArrow(sel) {
+    const noValue = sel.value === '' || sel.value === 'none';
+    sel.classList.toggle('select--no-arrow', !noValue);
+}
+
+document.querySelectorAll('.rating-form select').forEach(function(sel) {
+    updateSelectArrow(sel);
+    sel.addEventListener('change', function() { updateSelectArrow(sel); });
+});
+</script>
 
 {% endblock %}

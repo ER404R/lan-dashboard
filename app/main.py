@@ -44,6 +44,16 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
 
+# Allowed CDN sources for CSP
+_CSP_DEFAULT = "default-src 'self'"
+_CSP_STYLE = "style-src 'self' https://cdn.jsdelivr.net"
+_CSP_SCRIPT = "script-src 'self' https://unpkg.com"
+_CSP_IMG = "img-src 'self' data: https:"
+_CSP_FONT = "font-src 'self'"
+_CSP_CONNECT = "connect-src 'self'"
+_CSP_FRAME = "frame-ancestors 'none'"
+_CSP = "; ".join([_CSP_DEFAULT, _CSP_STYLE, _CSP_SCRIPT, _CSP_IMG, _CSP_FONT, _CSP_CONNECT, _CSP_FRAME])
+
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
@@ -51,6 +61,12 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = _CSP
+    response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Permissions-Policy"] = (
+        "geolocation=(), microphone=(), camera=(), payment=(), usb=()"
+    )
     return response
 
 

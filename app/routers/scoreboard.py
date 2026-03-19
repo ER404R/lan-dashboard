@@ -4,12 +4,16 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy import case, func as sa_func
 from sqlalchemy.orm import Session
 
+from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import flash, get_current_user, get_db, get_flashed_messages
+from app.limiter import limiter
 from app.models import Game, GameOwnership, Score, User
 from app.steam import search_steam_games
 
 router = APIRouter()
 templates = Jinja2Templates(directory="app/templates")
+
+_ALLOWED_URL_SCHEMES = ("http://", "https://")
 
 
 @router.get("/", response_class=HTMLResponse)
@@ -22,7 +26,6 @@ async def scoreboard(
     if not user:
         return RedirectResponse("/login", status_code=303)
 
-    # Subqueries to avoid cross-product between Score and GameOwnership
     score_sub = (
         db.query(
             Score.game_id,
@@ -61,7 +64,6 @@ async def scoreboard(
 
     games_with_scores = query.all()
 
-    # Get current user's scores and ownership
     user_scores = {s.game_id: s.value for s in db.query(Score).filter_by(user_id=user.id).all()}
     user_ownership = {
         o.game_id: o.status
@@ -69,21 +71,27 @@ async def scoreboard(
     }
 
     return templates.TemplateResponse(
+        request,
         "scoreboard.html",
         {
-            "request": request,
             "user": user,
             "games_with_scores": games_with_scores,
             "user_scores": user_scores,
             "user_ownership": user_ownership,
             "current_filter": filter,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
 
 @router.get("/games/search-steam", response_class=HTMLResponse)
-async def search_steam(request: Request, q: str = "", user: User | None = Depends(get_current_user)):
+@limiter.limit("30/minute")
+async def search_steam(
+    request: Request,
+    q: str = "",
+    user: User | None = Depends(get_current_user),
+):
     if not user:
         return HTMLResponse("")
 
@@ -96,8 +104,9 @@ async def search_steam(request: Request, q: str = "", user: User | None = Depend
         return HTMLResponse("<p>Failed to search Steam. Please try again.</p>")
 
     return templates.TemplateResponse(
+        request,
         "_search_results.html",
-        {"request": request, "results": results},
+        {"results": results, "csrf_token": get_csrf_token(request)},
     )
 
 
@@ -106,6 +115,7 @@ async def add_game(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     if not user:
         return RedirectResponse("/login", status_code=303)
@@ -120,7 +130,6 @@ async def add_game(
         flash(request, "Invalid game data.")
         return RedirectResponse("/", status_code=303)
 
-    # Check if game already exists
     existing = db.query(Game).filter_by(steam_appid=steam_appid).first()
     if existing:
         flash(request, f"'{name}' is already on the scoreboard.")
@@ -145,6 +154,7 @@ async def add_custom_game(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     if not user:
         return RedirectResponse("/login", status_code=303)
@@ -157,7 +167,14 @@ async def add_custom_game(
         flash(request, "Game name is required.")
         return RedirectResponse("/", status_code=303)
 
-    # Check if a custom game with the same name already exists
+    if len(name) > 255:
+        flash(request, "Game name must be at most 255 characters.")
+        return RedirectResponse("/", status_code=303)
+
+    if thumbnail_url and not thumbnail_url.startswith(_ALLOWED_URL_SCHEMES):
+        flash(request, "Thumbnail URL must start with http:// or https://")
+        return RedirectResponse("/", status_code=303)
+
     existing = db.query(Game).filter(Game.name == name, Game.steam_appid.is_(None)).first()
     if existing:
         flash(request, f"'{name}' is already on the scoreboard.")
@@ -181,6 +198,7 @@ async def rate_game(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     if not user:
         return RedirectResponse("/login", status_code=303)
@@ -196,13 +214,11 @@ async def rate_game(
         flash(request, "Rating must be between 0 and 10.")
         return RedirectResponse("/", status_code=303)
 
-    # Check game exists
     game = db.get(Game, game_id)
     if not game:
         flash(request, "Game not found.")
         return RedirectResponse("/", status_code=303)
 
-    # Upsert score
     existing = db.query(Score).filter_by(user_id=user.id, game_id=game_id).first()
     if existing:
         existing.value = value
@@ -219,6 +235,7 @@ async def set_ownership(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     if not user:
         return RedirectResponse("/login", status_code=303)
@@ -239,7 +256,6 @@ async def set_ownership(
         else:
             db.add(GameOwnership(user_id=user.id, game_id=game_id, status=status))
     else:
-        # "none" or empty — remove ownership record
         if existing:
             db.delete(existing)
 

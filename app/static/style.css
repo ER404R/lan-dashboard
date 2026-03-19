@@ -55,3 +55,10 @@
 .htmx-request .htmx-indicator {
     display: inline;
 }
+
+.select--no-arrow {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding-right: 0.5rem; /* reclaim space the arrow occupied */
+}

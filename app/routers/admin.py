@@ -5,6 +5,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
+from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import (
     flash,
     get_current_user,
@@ -31,12 +32,13 @@ async def tokens_page(
     tokens = db.query(InviteToken).order_by(InviteToken.created_at.desc()).all()
 
     return templates.TemplateResponse(
+        request,
         "admin_tokens.html",
         {
-            "request": request,
             "user": user,
             "tokens": tokens,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
 
@@ -46,6 +48,7 @@ async def generate_tokens(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_admin(user, request)
     if redirect:
@@ -79,6 +82,7 @@ async def revoke_token(
     request: Request,
     user: User | None = Depends(get_current_user),
     db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
 ):
     redirect = require_admin(user, request)
     if redirect:
@@ -110,11 +114,12 @@ async def users_page(
     users = db.query(User).order_by(User.created_at).all()
 
     return templates.TemplateResponse(
+        request,
         "admin_users.html",
         {
-            "request": request,
             "user": user,
             "users": users,
             "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
         },
     )
