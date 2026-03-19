@@ -12,8 +12,6 @@ RUN useradd -m -u 1000 appuser && \
 
 COPY . .
 
-ENV DATABASE_URL="sqlite:///./data/lan_dashboard.db"
-
 # Drop to non-root for runtime
 USER appuser
 
