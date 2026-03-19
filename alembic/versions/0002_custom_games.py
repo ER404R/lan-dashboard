@@ -17,14 +17,26 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    with op.batch_alter_table("games") as batch_op:
-        batch_op.alter_column("steam_appid", existing_type=sa.Integer(), nullable=True)
-        batch_op.alter_column("steam_url", existing_type=sa.String(512), nullable=True)
-        batch_op.alter_column("thumbnail_url", existing_type=sa.String(512), nullable=True)
+    conn = op.get_bind()
+    if conn.dialect.name == "sqlite":
+        with op.batch_alter_table("games") as batch_op:
+            batch_op.alter_column("steam_appid", existing_type=sa.Integer(), nullable=True)
+            batch_op.alter_column("steam_url", existing_type=sa.String(512), nullable=True)
+            batch_op.alter_column("thumbnail_url", existing_type=sa.String(512), nullable=True)
+    else:
+        op.alter_column("games", "steam_appid", existing_type=sa.Integer(), nullable=True)
+        op.alter_column("games", "steam_url", existing_type=sa.String(512), nullable=True)
+        op.alter_column("games", "thumbnail_url", existing_type=sa.String(512), nullable=True)
 
 
 def downgrade() -> None:
-    with op.batch_alter_table("games") as batch_op:
-        batch_op.alter_column("steam_appid", existing_type=sa.Integer(), nullable=False)
-        batch_op.alter_column("steam_url", existing_type=sa.String(512), nullable=False)
-        batch_op.alter_column("thumbnail_url", existing_type=sa.String(512), nullable=False)
+    conn = op.get_bind()
+    if conn.dialect.name == "sqlite":
+        with op.batch_alter_table("games") as batch_op:
+            batch_op.alter_column("steam_appid", existing_type=sa.Integer(), nullable=False)
+            batch_op.alter_column("steam_url", existing_type=sa.String(512), nullable=False)
+            batch_op.alter_column("thumbnail_url", existing_type=sa.String(512), nullable=False)
+    else:
+        op.alter_column("games", "steam_appid", existing_type=sa.Integer(), nullable=False)
+        op.alter_column("games", "steam_url", existing_type=sa.String(512), nullable=False)
+        op.alter_column("games", "thumbnail_url", existing_type=sa.String(512), nullable=False)
