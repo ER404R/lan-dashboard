@@ -5,7 +5,7 @@ from sqlalchemy import case, func as sa_func
 from sqlalchemy.orm import Session
 
 from app.csrf import get_csrf_token, verify_csrf_token
-from app.dependencies import flash, get_current_user, get_db, get_flashed_messages
+from app.dependencies import flash, get_authenticated_user, get_db, get_flashed_messages
 from app.limiter import limiter
 from app.models import Game, GameOwnership, Score, User
 from app.steam import search_steam_games
@@ -19,13 +19,10 @@ _ALLOWED_URL_SCHEMES = ("http://", "https://")
 @router.get("/", response_class=HTMLResponse)
 async def scoreboard(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     filter: str = "",
 ):
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
     score_sub = (
         db.query(
             Score.game_id,
@@ -90,11 +87,8 @@ async def scoreboard(
 async def search_steam(
     request: Request,
     q: str = "",
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
 ):
-    if not user:
-        return HTMLResponse("")
-
     if len(q.strip()) < 2:
         return HTMLResponse("")
 
@@ -113,13 +107,10 @@ async def search_steam(
 @router.post("/games/add")
 async def add_game(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
     form = await request.form()
     steam_appid = int(form.get("steam_appid", 0))
     name = form.get("name", "").strip()
@@ -152,13 +143,10 @@ async def add_game(
 @router.post("/games/add-custom")
 async def add_custom_game(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
     form = await request.form()
     name = form.get("name", "").strip()
     thumbnail_url = form.get("thumbnail_url", "").strip() or None
@@ -196,13 +184,10 @@ async def add_custom_game(
 async def rate_game(
     game_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
     form = await request.form()
     try:
         value = int(form.get("value", -1))
@@ -233,13 +218,10 @@ async def rate_game(
 async def set_ownership(
     game_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    if not user:
-        return RedirectResponse("/login", status_code=303)
-
     game = db.get(Game, game_id)
     if not game:
         flash(request, "Game not found.")

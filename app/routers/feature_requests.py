@@ -6,11 +6,10 @@ from sqlalchemy.orm import Session
 from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import (
     flash,
-    get_current_user,
+    get_admin_user,
+    get_authenticated_user,
     get_db,
     get_flashed_messages,
-    require_admin,
-    require_login,
 )
 from app.models import FeatureComment, FeatureRequest, User
 
@@ -25,13 +24,9 @@ MAX_COMMENT_LENGTH = 1000      # Phase 4b
 @router.get("", response_class=HTMLResponse)
 async def list_features(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_login(user, request)
-    if redirect:
-        return redirect
-
     features = (
         db.query(FeatureRequest)
         .order_by(FeatureRequest.resolved, FeatureRequest.created_at.desc())
@@ -53,13 +48,9 @@ async def list_features(
 @router.get("/new", response_class=HTMLResponse)
 async def new_feature_form(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_login(user, request)
-    if redirect:
-        return redirect
-
     open_count = db.query(FeatureRequest).filter_by(user_id=user.id, resolved=False).count()
     can_create = open_count < MAX_OPEN_REQUESTS_PER_USER
 
@@ -80,14 +71,10 @@ async def new_feature_form(
 @router.post("", response_class=HTMLResponse)
 async def create_feature(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_login(user, request)
-    if redirect:
-        return redirect
-
     open_count = db.query(FeatureRequest).filter_by(user_id=user.id, resolved=False).count()
     if open_count >= MAX_OPEN_REQUESTS_PER_USER:
         flash(request, f"You can only have {MAX_OPEN_REQUESTS_PER_USER} open requests at a time.")
@@ -122,13 +109,9 @@ async def create_feature(
 async def feature_detail(
     feature_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_login(user, request)
-    if redirect:
-        return redirect
-
     feature = db.get(FeatureRequest, feature_id)
     if not feature:
         flash(request, "Feature request not found.")
@@ -158,14 +141,10 @@ async def feature_detail(
 async def add_comment(
     feature_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_authenticated_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_login(user, request)
-    if redirect:
-        return redirect
-
     feature = db.get(FeatureRequest, feature_id)
     if not feature:
         flash(request, "Feature request not found.")
@@ -196,14 +175,10 @@ async def add_comment(
 async def resolve_feature(
     feature_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     feature = db.get(FeatureRequest, feature_id)
     if not feature:
         flash(request, "Feature request not found.")
@@ -221,14 +196,10 @@ async def resolve_feature(
 async def delete_feature(
     feature_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     feature = db.get(FeatureRequest, feature_id)
     if not feature:
         flash(request, "Feature request not found.")
