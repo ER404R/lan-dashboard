@@ -121,6 +121,14 @@ async def add_game(
         flash(request, "Invalid game data.")
         return RedirectResponse("/", status_code=303)
 
+    if thumbnail_url and not thumbnail_url.startswith(_ALLOWED_URL_SCHEMES):
+        flash(request, "Thumbnail URL must start with http:// or https://")
+        return RedirectResponse("/", status_code=303)
+
+    if steam_url and not steam_url.startswith(_ALLOWED_URL_SCHEMES):
+        flash(request, "Steam URL must start with http:// or https://")
+        return RedirectResponse("/", status_code=303)
+
     existing = db.query(Game).filter_by(steam_appid=steam_appid).first()
     if existing:
         flash(request, f"'{name}' is already on the scoreboard.")

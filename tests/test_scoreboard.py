@@ -73,6 +73,96 @@ class TestAddGame:
 
 
 # ---------------------------------------------------------------------------
+# URL validation for steam games
+# ---------------------------------------------------------------------------
+class TestAddGameUrlValidation:
+    """steam_url and thumbnail_url must be validated in /games/add."""
+
+    def test_javascript_steam_url_rejected(self, auth_client, db):
+        client, user = auth_client
+        csrf = _get_scoreboard_csrf(client)
+        r = client.post(
+            "/games/add",
+            data={
+                "steam_appid": "111111",
+                "name": "Evil Game",
+                "steam_url": "javascript:evil()",
+                "csrf_token": csrf,
+            },
+            follow_redirects=True,
+        )
+        assert r.status_code == 200
+        assert "http" in r.text or "URL" in r.text
+        from app.models import Game
+        from tests.conftest import _TestingSession
+        with _TestingSession() as s:
+            assert s.query(Game).filter_by(steam_appid=111111).first() is None
+
+    def test_javascript_thumbnail_url_rejected(self, auth_client, db):
+        client, user = auth_client
+        csrf = _get_scoreboard_csrf(client)
+        r = client.post(
+            "/games/add",
+            data={
+                "steam_appid": "222222",
+                "name": "Evil Thumb",
+                "steam_url": "https://store.steampowered.com/app/222222",
+                "thumbnail_url": "javascript:evil()",
+                "csrf_token": csrf,
+            },
+            follow_redirects=True,
+        )
+        assert r.status_code == 200
+        assert "http" in r.text or "URL" in r.text
+        from app.models import Game
+        from tests.conftest import _TestingSession
+        with _TestingSession() as s:
+            assert s.query(Game).filter_by(steam_appid=222222).first() is None
+
+    def test_data_uri_steam_url_rejected(self, auth_client, db):
+        client, user = auth_client
+        csrf = _get_scoreboard_csrf(client)
+        r = client.post(
+            "/games/add",
+            data={
+                "steam_appid": "333333",
+                "name": "Data Game",
+                "steam_url": "data:text/html,<script>alert(1)</script>",
+                "csrf_token": csrf,
+            },
+            follow_redirects=True,
+        )
+        assert r.status_code == 200
+        from app.models import Game
+        from tests.conftest import _TestingSession
+        with _TestingSession() as s:
+            assert s.query(Game).filter_by(steam_appid=333333).first() is None
+
+    def test_valid_https_urls_accepted(self, auth_client, db):
+        """Legitimate Steam URLs must still be accepted."""
+        client, user = auth_client
+        csrf = _get_scoreboard_csrf(client)
+        r = client.post(
+            "/games/add",
+            data={
+                "steam_appid": "444444",
+                "name": "Valid Game",
+                "steam_url": "https://store.steampowered.com/app/444444",
+                "thumbnail_url": "https://cdn.akamai.steamstatic.com/img.jpg",
+                "csrf_token": csrf,
+            },
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        from app.models import Game
+        from tests.conftest import _TestingSession
+        with _TestingSession() as s:
+            game = s.query(Game).filter_by(steam_appid=444444).first()
+            assert game is not None
+            assert game.steam_url == "https://store.steampowered.com/app/444444"
+
+
+# ---------------------------------------------------------------------------
 # Adding custom (non-Steam) games
 # ---------------------------------------------------------------------------
 class TestAddCustomGame:
