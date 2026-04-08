@@ -27,7 +27,7 @@ def upgrade() -> None:
             sa.Column("id", sa.Integer(), primary_key=True),
             sa.Column("username", sa.String(50), nullable=False),
             sa.Column("password_hash", sa.String(128), nullable=False),
-            sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("is_admin", sa.Boolean(), nullable=False, server_default=sa.text("false")),
             sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
             sa.UniqueConstraint("username"),
         )
@@ -65,7 +65,7 @@ def upgrade() -> None:
             sa.Column("token", sa.String(64), nullable=False),
             sa.Column("max_uses", sa.Integer(), nullable=False, server_default=sa.text("1")),
             sa.Column("use_count", sa.Integer(), nullable=False, server_default=sa.text("0")),
-            sa.Column("revoked", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("revoked", sa.Boolean(), nullable=False, server_default=sa.text("false")),
             sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
             sa.UniqueConstraint("token"),
         )
@@ -78,7 +78,7 @@ def upgrade() -> None:
             sa.Column("title", sa.String(200), nullable=False),
             sa.Column("description", sa.Text(), nullable=False),
             sa.Column("user_id", sa.Integer(), sa.ForeignKey("users.id"), nullable=False),
-            sa.Column("resolved", sa.Boolean(), nullable=False, server_default=sa.text("0")),
+            sa.Column("resolved", sa.Boolean(), nullable=False, server_default=sa.text("false")),
             sa.Column("created_at", sa.DateTime(), server_default=sa.func.now()),
         )
 
