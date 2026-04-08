@@ -8,10 +8,9 @@ from sqlalchemy.orm import Session
 from app.csrf import get_csrf_token, verify_csrf_token
 from app.dependencies import (
     flash,
-    get_current_user,
+    get_admin_user,
     get_db,
     get_flashed_messages,
-    require_admin,
 )
 from app.models import InviteToken, User
 
@@ -22,13 +21,9 @@ templates = Jinja2Templates(directory="app/templates")
 @router.get("/tokens", response_class=HTMLResponse)
 async def tokens_page(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     tokens = db.query(InviteToken).order_by(InviteToken.created_at.desc()).all()
 
     return templates.TemplateResponse(
@@ -46,14 +41,10 @@ async def tokens_page(
 @router.post("/tokens/generate")
 async def generate_tokens(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     form = await request.form()
     try:
         count = min(int(form.get("count", 1)), 50)
@@ -80,14 +71,10 @@ async def generate_tokens(
 async def revoke_token(
     token_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     token = db.get(InviteToken, token_id)
     if not token:
         flash(request, "Token not found.")
@@ -104,13 +91,9 @@ async def revoke_token(
 @router.get("/users", response_class=HTMLResponse)
 async def users_page(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     users = db.query(User).order_by(User.created_at).all()
 
     return templates.TemplateResponse(

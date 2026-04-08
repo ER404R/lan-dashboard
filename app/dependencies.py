@@ -5,6 +5,7 @@ from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 
 from app.database import SessionLocal
+from app.exceptions import UnauthenticatedError, UnauthorizedError
 from app.models import User
 
 
@@ -46,3 +47,24 @@ def require_admin(user: User | None, request: Request) -> RedirectResponse | Non
         flash(request, "Admin access required.")
         return RedirectResponse("/", status_code=303)
     return None
+
+
+def get_authenticated_user(
+    request: Request, db: Session = Depends(get_db)
+) -> User:
+    """Dependency that enforces authentication by raising UnauthenticatedError if user is not logged in"""
+    user = get_current_user(request, db)
+    if not user:
+        raise UnauthenticatedError()
+    return user
+
+
+def get_admin_user(
+    request: Request,
+    db: Session = Depends(get_db),
+    user: User = Depends(get_authenticated_user),
+) -> User:
+    """Dependency that enforces admin authorization by raising UnauthorizedError if user is not admin"""
+    if not user.is_admin:
+        raise UnauthorizedError()
+    return user
