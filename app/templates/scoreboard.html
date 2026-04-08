@@ -4,7 +4,7 @@
 
 <section>
     <h2>Add a Game</h2>
-    <div style="display:flex;gap:0.5rem;align-items:center">
+    <div class="flex-gap-sm">
         <input type="search"
                name="q"
                placeholder="Search Steam for a game..."
@@ -12,8 +12,8 @@
                hx-trigger="keyup changed delay:500ms"
                hx-target="#search-results"
                hx-indicator="#search-spinner"
-               style="margin:0">
-        <button class="outline" style="margin:0;white-space:nowrap" onclick="document.getElementById('custom-game-dialog').showModal()">Add Custom</button>
+               class="m-0">
+        <button class="outline m-0 nowrap" data-dialog-open="custom-game-dialog">Add Custom</button>
     </div>
     <span id="search-spinner" class="htmx-indicator" aria-busy="true">Searching...</span>
     <div id="search-results" class="game-search-results"></div>
@@ -21,12 +21,12 @@
     <dialog id="custom-game-dialog">
         <article>
             <header>
-                <button aria-label="Close" rel="prev" onclick="document.getElementById('custom-game-dialog').close()"></button>
+                <button aria-label="Close" rel="prev" data-dialog-close></button>
                 <h3>Add a non-Steam game</h3>
             </header>
             <form method="post" action="/games/add-custom">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                <label for="custom-name">Game name <span style="color:var(--pico-del-color)">*</span></label>
+                <label for="custom-name">Game name <span class="color-required">*</span></label>
                 <input type="text" id="custom-name" name="name" placeholder="e.g. Minecraft" maxlength="255" required>
                 <label for="custom-thumb">Image URL (optional)</label>
                 <input type="url" id="custom-thumb" name="thumbnail_url" placeholder="https://example.com/icon.png">
@@ -39,19 +39,19 @@
 <hr>
 
 <section>
-    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-        <h2 style="margin:0">Scoreboard</h2>
+    <div class="flex-between-wrap">
+        <h2 class="m-0">Scoreboard</h2>
         <div>
             {% if current_filter == "new" %}
-            <a href="/" role="button" class="outline secondary" style="margin:0">Show All</a>
+            <a href="/" role="button" class="outline secondary m-0">Show All</a>
             {% else %}
-            <a href="/?filter=new" role="button" class="outline" style="margin:0">Show New Games Only</a>
+            <a href="/?filter=new" role="button" class="outline m-0">Show New Games Only</a>
             {% endif %}
         </div>
     </div>
 
     {% if games_with_scores %}
-    <div class="overflow-auto" style="margin-top:1rem">
+    <div class="overflow-auto mt-1">
         <table class="scoreboard-table">
             <thead>
                 <tr>
@@ -80,7 +80,7 @@
                         {{ game.name }}
                         {% endif %}
                         {% if owner_count < 2 %}
-                        <sup style="color:var(--pico-ins-color);font-weight:bold">NEW</sup>
+                        <sup class="badge-new">NEW</sup>
                         {% endif %}
                     </td>
                     <td>{{ "%.1f"|format(avg_score) }}</td>
@@ -119,17 +119,5 @@
     <p>{% if current_filter == "new" %}No new games found. <a href="/">Show all games.</a>{% else %}No games yet. Search Steam above to add one!{% endif %}</p>
     {% endif %}
 </section>
-
-<script>
-function updateSelectArrow(sel) {
-    const noValue = sel.value === '' || sel.value === 'none';
-    sel.classList.toggle('select--no-arrow', !noValue);
-}
-
-document.querySelectorAll('.rating-form select').forEach(function(sel) {
-    updateSelectArrow(sel);
-    sel.addEventListener('change', function() { updateSelectArrow(sel); });
-});
-</script>
 
 {% endblock %}

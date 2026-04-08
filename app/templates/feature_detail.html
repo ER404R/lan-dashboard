@@ -4,8 +4,8 @@
 
 <article>
     <header>
-        <div style="display:flex;justify-content:space-between;align-items:center">
-            <h2 style="margin:0">{{ feature.title }}</h2>
+        <div class="flex-between">
+            <h2 class="m-0">{{ feature.title }}</h2>
             {% if feature.resolved %}
             <mark>Resolved</mark>
             {% else %}
@@ -17,7 +17,7 @@
     <p>{{ feature.description }}</p>
 
     {% if user.is_admin %}
-    <footer style="display:flex;gap:1rem">
+    <footer class="flex-gap">
         <form method="post" action="/features/{{ feature.id }}/resolve">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="outline">
@@ -25,7 +25,7 @@
             </button>
         </form>
         <form method="post" action="/features/{{ feature.id }}/delete"
-              onsubmit="return confirm('Delete this feature request and all comments?')">
+              data-confirm="Delete this feature request and all comments?">
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
             <button type="submit" class="secondary outline">Delete</button>
         </form>
@@ -39,12 +39,12 @@
 
 {% if comments %}
 {% for comment in comments %}
-<article style="padding:0.75rem 1rem;margin-bottom:0.5rem">
-    <header style="padding:0;margin-bottom:0.5rem">
+<article class="msg-box-sm">
+    <header class="header-reset">
         <strong>{{ comment.user.username }}</strong>
         <small>&middot; {{ comment.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
     </header>
-    <p style="margin:0">{{ comment.content }}</p>
+    <p class="m-0">{{ comment.content }}</p>
 </article>
 {% endfor %}
 {% else %}

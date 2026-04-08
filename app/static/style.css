@@ -62,3 +62,33 @@
     appearance: none;
     padding-right: 0.5rem; /* reclaim space the arrow occupied */
 }
+
+/* Layout utilities */
+.flex-between { display: flex; justify-content: space-between; align-items: center; }
+.flex-between-wrap { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem; }
+.flex-gap { display: flex; gap: 1rem; }
+.flex-gap-sm { display: flex; gap: 0.5rem; align-items: center; }
+.flex-gap-end { display: flex; gap: 1rem; align-items: end; flex-wrap: wrap; }
+
+/* Spacing resets */
+.m-0 { margin: 0; }
+.mt-1 { margin-top: 1rem; }
+.text-center { text-align: center; }
+.nowrap { white-space: nowrap; }
+
+/* Component utilities */
+.card-sm { max-width: 400px; margin: 2rem auto; }
+.card-md { max-width: 600px; margin: 2rem auto; }
+.msg-box { padding: 0.75rem 1rem; margin-bottom: 1rem; }
+.msg-box-sm { padding: 0.75rem 1rem; margin-bottom: 0.5rem; }
+.btn-nav { margin: 0; padding: 0.25rem 0.75rem; }
+.btn-sm { margin: 0; padding: 0.25rem 0.5rem; }
+.header-reset { padding: 0; margin-bottom: 0.5rem; }
+
+/* Input widths */
+.w-100 { width: 100px; }
+.w-120 { width: 120px; }
+
+/* Semantic colors */
+.color-required { color: var(--pico-del-color); }
+.badge-new { color: var(--pico-ins-color); font-weight: bold; }
