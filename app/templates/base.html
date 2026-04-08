@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
+
     <nav class="container">
         <ul>
             <li><strong><a href="/" class="contrast">LAN Dashboard</a></strong></li>
@@ -22,9 +23,9 @@
             {% endif %}
             <li>{{ user.username }}{% if user.is_admin %} <sup>admin</sup>{% endif %}</li>
             <li>
-                <form method="post" action="/logout" style="margin:0">
+                <form method="post" action="/logout" class="m-0">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                    <button type="submit" class="secondary outline" style="margin:0;padding:0.25rem 0.75rem">Logout</button>
+                    <button type="submit" class="secondary outline btn-nav">Logout</button>
                 </form>
             </li>
             {% endif %}
@@ -32,9 +33,10 @@
     </nav>
     <main class="container">
         {% for msg in messages %}
-        <article style="padding:0.75rem 1rem;margin-bottom:1rem">{{ msg }}</article>
+        <article class="msg-box">{{ msg }}</article>
         {% endfor %}
         {% block content %}{% endblock %}
     </main>
+    <script src="/static/app.js"></script>
 </body>
 </html>

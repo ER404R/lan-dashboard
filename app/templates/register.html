@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Register - LAN Dashboard{% endblock %}
 {% block content %}
-<article style="max-width:400px;margin:2rem auto">
+<article class="card-sm">
     <header><h2>Register</h2></header>
     {% if not registration_enabled %}
     <p><mark>Registration is currently closed.</mark></p>
@@ -17,6 +17,6 @@
         <button type="submit">Register</button>
     </form>
     {% endif %}
-    <p style="text-align:center"><a href="/login">Already have an account? Login</a></p>
+    <p class="text-center"><a href="/login">Already have an account? Login</a></p>
 </article>
 {% endblock %}

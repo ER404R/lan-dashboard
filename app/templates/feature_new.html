@@ -2,7 +2,7 @@
 {% block title %}New Feature Request - LAN Dashboard{% endblock %}
 {% block content %}
 
-<article style="max-width:600px;margin:2rem auto">
+<article class="card-md">
     <header><h2>New Feature Request</h2></header>
 
     {% if not can_create %}
@@ -16,7 +16,7 @@
         <input type="text" id="title" name="title" maxlength="200" required autofocus placeholder="Short summary of the feature">
         <label for="description">Description</label>
         <textarea id="description" name="description" rows="5" required placeholder="Describe the feature you'd like to see..." maxlength="2000"></textarea>
-        <div style="display:flex;gap:1rem">
+        <div class="flex-gap">
             <button type="submit">Submit</button>
             <a href="/features" role="button" class="secondary outline">Cancel</a>
         </div>

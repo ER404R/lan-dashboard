@@ -6,15 +6,15 @@
 
 <section>
     <h3>Generate New Tokens</h3>
-    <form method="post" action="/admin/tokens/generate" style="display:flex;gap:1rem;align-items:end;flex-wrap:wrap">
+    <form method="post" action="/admin/tokens/generate" class="flex-gap-end">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
         <label>
             How many?
-            <input type="number" name="count" value="1" min="1" max="50" style="width:100px">
+            <input type="number" name="count" value="1" min="1" max="50" class="w-100">
         </label>
         <label>
             Max uses (0 = unlimited)
-            <input type="number" name="max_uses" value="1" min="0" style="width:120px">
+            <input type="number" name="max_uses" value="1" min="0" class="w-120">
         </label>
         <button type="submit">Generate</button>
     </form>
@@ -52,9 +52,9 @@
                     </td>
                     <td>{{ token.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
                     <td>
-                        <form method="post" action="/admin/tokens/{{ token.id }}/revoke" style="margin:0">
+                        <form method="post" action="/admin/tokens/{{ token.id }}/revoke" class="m-0">
                             <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
-                            <button type="submit" class="outline secondary" style="margin:0;padding:0.25rem 0.5rem">
+                            <button type="submit" class="outline secondary btn-sm">
                                 {% if token.revoked %}Restore{% else %}Revoke{% endif %}
                             </button>
                         </form>
