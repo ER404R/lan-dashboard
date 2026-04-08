@@ -1,8 +1,8 @@
 # lan-dashboard
 
-A self-hosted dashboard for LAN parties. Tracks game scores, manages a shared game library (Steam + custom), and lets users submit feature requests. User registration is invite-token gated.
+> **Disclaimer:** This project is used to test agentic AI coding workflows. The codebase is largely AI-generated with minimal human oversight. Expect security vulnerabilities, rough edges, and questionable code practices. Use at your own risk.
 
-> **Disclaimer:** This project is vibe coded and likely contains security vulnerabilities and bad code practices. Use at your own risk.
+A self-hosted dashboard for LAN parties. Tracks game scores, manages a shared game library (Steam + custom), and lets users submit feature requests. User registration is invite-token gated.
 
 ## Features
 
