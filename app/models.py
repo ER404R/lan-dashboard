@@ -11,7 +11,7 @@ class User(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     username: Mapped[str] = mapped_column(String(50), unique=True, index=True)
-    password_hash: Mapped[str] = mapped_column(String(128))
+    password_hash: Mapped[str] = mapped_column(Text)
     is_admin: Mapped[bool] = mapped_column(default=False)
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
