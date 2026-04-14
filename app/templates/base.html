@@ -21,6 +21,7 @@
             {% if user.is_admin %}
             <li><a href="/admin/tokens">Tokens</a></li>
             <li><a href="/admin/users">Users</a></li>
+            <li><a href="/admin/games">Games</a></li>
             {% endif %}
             <li>{{ user.username }}{% if user.is_admin %} <sup>admin</sup>{% endif %}</li>
             <li>
