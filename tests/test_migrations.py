@@ -97,3 +97,23 @@ class TestMigrations:
         self._run_upgrade(db_url)  # must be a no-op
         tables = _table_names(db_url)
         assert _EXPECTED_TABLES.issubset(tables)
+
+    def test_password_hash_column_is_text(self, tmp_path):
+        """After upgrade, users.password_hash must be TEXT (unbounded), not VARCHAR."""
+        db_url = _sqlite_url(tmp_path)
+        self._run_upgrade(db_url)
+        engine = sa.create_engine(db_url)
+        try:
+            with engine.connect() as conn:
+                inspector = sa.inspect(conn)
+                columns = {col["name"]: col for col in inspector.get_columns("users")}
+        finally:
+            engine.dispose()
+        assert "password_hash" in columns
+        col_type = columns["password_hash"]["type"]
+        # SQLite maps TEXT to TEXT; PostgreSQL maps Text() to TEXT.
+        # Neither should be a bounded VARCHAR/String type.
+        assert not isinstance(col_type, sa.String) or col_type.length is None, (
+            f"password_hash column has a length limit: {col_type!r}. "
+            "It must be TEXT (unbounded)."
+        )
