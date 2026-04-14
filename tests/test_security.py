@@ -45,6 +45,48 @@ class TestSecurityHeaders:
 
 
 # ---------------------------------------------------------------------------
+# Session cookie flags
+# ---------------------------------------------------------------------------
+class TestSessionCookie:
+    def test_session_cookie_has_secure_flag(self, client, db):
+        """The session cookie must carry the Secure flag so it is never sent over HTTP."""
+        create_user(db)
+        resp = client.get("/login")
+        csrf = extract_csrf(resp.text)
+        # POST login to trigger session cookie issuance
+        r = client.post(
+            "/login",
+            data={"username": "testuser", "password": "testpass1!", "csrf_token": csrf},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303  # confirm login succeeded
+
+        # Inspect the Set-Cookie header for the session cookie
+        set_cookie = r.headers.get("set-cookie", "")
+        assert "session" in set_cookie, "Expected session cookie to be set after login"
+        assert "secure" in set_cookie.lower(), (
+            "Session cookie is missing the Secure flag — "
+            "it could be transmitted over plain HTTP"
+        )
+
+    def test_session_cookie_has_httponly_flag(self, client, db):
+        """The session cookie must carry HttpOnly to block JS access."""
+        create_user(db)
+        resp = client.get("/login")
+        csrf = extract_csrf(resp.text)
+        r = client.post(
+            "/login",
+            data={"username": "testuser", "password": "testpass1!", "csrf_token": csrf},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        set_cookie = r.headers.get("set-cookie", "")
+        assert "httponly" in set_cookie.lower(), (
+            "Session cookie is missing the HttpOnly flag"
+        )
+
+
+# ---------------------------------------------------------------------------
 # CSRF protection
 # ---------------------------------------------------------------------------
 class TestCSRF:

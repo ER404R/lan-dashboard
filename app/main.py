@@ -42,7 +42,7 @@ app = FastAPI(title="LAN Dashboard", lifespan=lifespan)
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY, https_only=True)
 
 # Allowed CDN sources for CSP
 _CSP_DEFAULT = "default-src 'self'"
