@@ -112,13 +112,9 @@ async def users_page(
 @router.get("/games", response_class=HTMLResponse)
 async def games_page(
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     score_counts = (
         db.query(Score.game_id, sa_func.count(Score.id).label("score_count"))
         .group_by(Score.game_id)
@@ -148,14 +144,10 @@ async def games_page(
 async def delete_game(
     game_id: int,
     request: Request,
-    user: User | None = Depends(get_current_user),
+    user: User = Depends(get_admin_user),
     db: Session = Depends(get_db),
     _csrf: None = Depends(verify_csrf_token),
 ):
-    redirect = require_admin(user, request)
-    if redirect:
-        return redirect
-
     game = db.get(Game, game_id)
     if not game:
         flash(request, "Game not found.")
