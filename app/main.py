@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Response
+from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -9,6 +10,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 from app.config import settings
 from app.database import SessionLocal
+from app.exceptions import UnauthenticatedError, UnauthorizedError
 from app.limiter import limiter
 from app.models import InviteToken
 from app.routers import admin, auth_routes, feature_requests, scoreboard, theme
@@ -41,6 +43,22 @@ app = FastAPI(title="LAN Dashboard", lifespan=lifespan)
 
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+@app.exception_handler(UnauthenticatedError)
+async def handle_unauthenticated(request: Request, exc: UnauthenticatedError):
+    from app.dependencies import flash
+
+    flash(request, "Please log in.")
+    return RedirectResponse("/login", status_code=303)
+
+
+@app.exception_handler(UnauthorizedError)
+async def handle_unauthorized(request: Request, exc: UnauthorizedError):
+    from app.dependencies import flash
+
+    flash(request, "Admin access required.")
+    return RedirectResponse("/", status_code=303)
 
 app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY, https_only=True)
 
