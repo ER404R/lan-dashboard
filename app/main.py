@@ -13,7 +13,7 @@ from app.database import SessionLocal
 from app.exceptions import UnauthenticatedError, UnauthorizedError
 from app.limiter import limiter
 from app.models import InviteToken
-from app.routers import admin, auth_routes, feature_requests, scoreboard
+from app.routers import admin, auth_routes, feature_requests, scoreboard, theme
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -60,7 +60,7 @@ async def handle_unauthorized(request: Request, exc: UnauthorizedError):
     flash(request, "Admin access required.")
     return RedirectResponse("/", status_code=303)
 
-app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY, https_only=True)
 
 # Allowed CDN sources for CSP
 _CSP_DEFAULT = "default-src 'self'"
@@ -94,3 +94,4 @@ app.include_router(auth_routes.router)
 app.include_router(scoreboard.router)
 app.include_router(admin.router)
 app.include_router(feature_requests.router)
+app.include_router(theme.router)

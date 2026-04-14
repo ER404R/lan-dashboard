@@ -1,10 +1,11 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="{{ request.session.get('theme', 'dark') }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{% block title %}LAN Dashboard{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <meta name="htmx-config" content='{"includeIndicatorStyles": false}'>
     <script src="https://unpkg.com/htmx.org@2.0.4"></script>
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -20,8 +21,17 @@
             {% if user.is_admin %}
             <li><a href="/admin/tokens">Tokens</a></li>
             <li><a href="/admin/users">Users</a></li>
+            <li><a href="/admin/games">Games</a></li>
             {% endif %}
             <li>{{ user.username }}{% if user.is_admin %} <sup>admin</sup>{% endif %}</li>
+            <li>
+                <form method="post" action="/theme/toggle" class="m-0">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                    <button type="submit" class="secondary outline btn-nav" aria-label="Toggle theme">
+                        {% if request.session.get('theme', 'dark') == 'dark' %}☀{% else %}🌙{% endif %}
+                    </button>
+                </form>
+            </li>
             <li>
                 <form method="post" action="/logout" class="m-0">
                     <input type="hidden" name="csrf_token" value="{{ csrf_token }}">

@@ -112,7 +112,11 @@ async def add_game(
     _csrf: None = Depends(verify_csrf_token),
 ):
     form = await request.form()
-    steam_appid = int(form.get("steam_appid", 0))
+    try:
+        steam_appid = int(form.get("steam_appid", 0))
+    except (ValueError, TypeError):
+        flash(request, "Invalid game data.")
+        return RedirectResponse("/", status_code=303)
     name = form.get("name", "").strip()
     thumbnail_url = form.get("thumbnail_url", "")
     steam_url = form.get("steam_url", "")

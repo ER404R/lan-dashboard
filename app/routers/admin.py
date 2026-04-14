@@ -3,6 +3,7 @@ import secrets
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func as sa_func
 from sqlalchemy.orm import Session
 
 from app.csrf import get_csrf_token, verify_csrf_token
@@ -12,7 +13,7 @@ from app.dependencies import (
     get_db,
     get_flashed_messages,
 )
-from app.models import InviteToken, User
+from app.models import Game, GameOwnership, InviteToken, Score, User
 
 router = APIRouter(prefix="/admin")
 templates = Jinja2Templates(directory="app/templates")
@@ -106,3 +107,68 @@ async def users_page(
             "csrf_token": get_csrf_token(request),
         },
     )
+
+
+@router.get("/games", response_class=HTMLResponse)
+async def games_page(
+    request: Request,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
+    redirect = require_admin(user, request)
+    if redirect:
+        return redirect
+
+    score_counts = (
+        db.query(Score.game_id, sa_func.count(Score.id).label("score_count"))
+        .group_by(Score.game_id)
+        .subquery()
+    )
+
+    games = (
+        db.query(Game, sa_func.coalesce(score_counts.c.score_count, 0).label("score_count"))
+        .outerjoin(score_counts, Game.id == score_counts.c.game_id)
+        .order_by(Game.created_at.desc())
+        .all()
+    )
+
+    return templates.TemplateResponse(
+        request,
+        "admin_games.html",
+        {
+            "user": user,
+            "games": games,
+            "messages": get_flashed_messages(request),
+            "csrf_token": get_csrf_token(request),
+        },
+    )
+
+
+@router.post("/games/{game_id}/delete")
+async def delete_game(
+    game_id: int,
+    request: Request,
+    user: User | None = Depends(get_current_user),
+    db: Session = Depends(get_db),
+    _csrf: None = Depends(verify_csrf_token),
+):
+    redirect = require_admin(user, request)
+    if redirect:
+        return redirect
+
+    game = db.get(Game, game_id)
+    if not game:
+        flash(request, "Game not found.")
+        return RedirectResponse("/admin/games", status_code=303)
+
+    game_name = game.name
+
+    # Delete dependent rows first (no ORM cascade configured on these relationships)
+    db.query(Score).filter(Score.game_id == game_id).delete(synchronize_session=False)
+    db.query(GameOwnership).filter(GameOwnership.game_id == game_id).delete(synchronize_session=False)
+
+    db.delete(game)
+    db.commit()
+
+    flash(request, f"'{game_name}' has been deleted.")
+    return RedirectResponse("/admin/games", status_code=303)

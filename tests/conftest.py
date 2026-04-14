@@ -93,7 +93,7 @@ def db(_clean_db):
 def client(_clean_db):
     """Unauthenticated TestClient.
     Explicitly depends on _clean_db so tables exist before the lifespan runs."""
-    with TestClient(app, raise_server_exceptions=True) as c:
+    with TestClient(app, raise_server_exceptions=True, base_url="https://testserver") as c:
         yield c
 
 

@@ -62,6 +62,22 @@ class TestAddGame:
         )
         assert "already on the scoreboard" in r.text
 
+    def test_add_game_non_numeric_appid_returns_flash(self, auth_client, db):
+        """Non-numeric steam_appid must not raise 500; should flash 'Invalid game data.'"""
+        client, user = auth_client
+        csrf = _get_scoreboard_csrf(client)
+        r = client.post(
+            "/games/add",
+            data={
+                "steam_appid": "not-a-number",
+                "name": "Some Game",
+                "csrf_token": csrf,
+            },
+            follow_redirects=True,
+        )
+        assert r.status_code == 200
+        assert "Invalid game data." in r.text
+
     def test_unauthenticated_add_game_blocked(self, client):
         # No session => CSRF check fires (no session token), returns 403
         r = client.post(

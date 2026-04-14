@@ -1,8 +1,8 @@
 """Tests for the admin routes (app/routers/admin.py)."""
 import pytest
 
-from tests.conftest import extract_csrf
-from app.models import InviteToken
+from tests.conftest import create_game, create_user, extract_csrf
+from app.models import Game, GameOwnership, InviteToken, Score
 
 
 # ---------------------------------------------------------------------------
@@ -219,10 +219,152 @@ class TestUsersPage:
         assert admin.username in r.text
 
     def test_users_page_lists_all_users(self, admin_client, db):
-        from tests.conftest import create_user
         client, admin = admin_client
         create_user(db, username="extrauser1")
         create_user(db, username="extrauser2")
         r = client.get("/admin/users")
         assert "extrauser1" in r.text
         assert "extrauser2" in r.text
+
+
+# ---------------------------------------------------------------------------
+# Game management
+# ---------------------------------------------------------------------------
+def _get_admin_games_csrf(client):
+    resp = client.get("/admin/games")
+    assert resp.status_code == 200
+    csrf = extract_csrf(resp.text)
+    assert csrf, "CSRF token not found on admin/games page"
+    return csrf
+
+
+class TestAdminGamesPage:
+    def test_unauthenticated_redirects(self, client):
+        r = client.get("/admin/games", follow_redirects=False)
+        assert r.status_code == 303
+        assert "/login" in r.headers["location"]
+
+    def test_regular_user_blocked(self, auth_client):
+        client, _ = auth_client
+        r = client.get("/admin/games", follow_redirects=False)
+        assert r.status_code == 303
+        assert "/admin" not in r.headers.get("location", "")
+
+    def test_admin_can_access_games_page(self, admin_client):
+        client, _ = admin_client
+        r = client.get("/admin/games")
+        assert r.status_code == 200
+
+    def test_games_page_lists_games(self, admin_client, db):
+        client, admin = admin_client
+        create_game(db, name="Portal 2", added_by_id=admin.id)
+        create_game(db, name="Minecraft", added_by_id=admin.id)
+        r = client.get("/admin/games")
+        assert "Portal 2" in r.text
+        assert "Minecraft" in r.text
+
+    def test_games_page_shows_empty_state(self, admin_client):
+        client, _ = admin_client
+        r = client.get("/admin/games")
+        assert r.status_code == 200
+        assert "No games" in r.text
+
+
+class TestAdminDeleteGame:
+    def test_delete_game_success(self, admin_client, db):
+        client, admin = admin_client
+        game = create_game(db, name="Doomed Game", added_by_id=admin.id)
+        game_id = game.id
+        csrf = _get_admin_games_csrf(client)
+        r = client.post(
+            f"/admin/games/{game_id}/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert r.headers["location"] == "/admin/games"
+        db.expire_all()
+        assert db.get(Game, game_id) is None
+
+    def test_delete_game_cascades_scores(self, admin_client, db):
+        client, admin = admin_client
+        game = create_game(db, name="Scored Game", added_by_id=admin.id)
+        score = Score(user_id=admin.id, game_id=game.id, value=7)
+        db.add(score)
+        db.commit()
+        score_id = score.id
+
+        csrf = _get_admin_games_csrf(client)
+        client.post(
+            f"/admin/games/{game.id}/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=False,
+        )
+        db.expire_all()
+        assert db.get(Score, score_id) is None
+
+    def test_delete_game_cascades_ownerships(self, admin_client, db):
+        client, admin = admin_client
+        game = create_game(db, name="Owned Game", added_by_id=admin.id)
+        ownership = GameOwnership(user_id=admin.id, game_id=game.id, status="owned")
+        db.add(ownership)
+        db.commit()
+        ownership_id = ownership.id
+
+        csrf = _get_admin_games_csrf(client)
+        client.post(
+            f"/admin/games/{game.id}/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=False,
+        )
+        db.expire_all()
+        assert db.get(GameOwnership, ownership_id) is None
+
+    def test_delete_nonexistent_game_redirects(self, admin_client):
+        client, _ = admin_client
+        csrf = _get_admin_games_csrf(client)
+        r = client.post(
+            "/admin/games/99999/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert "/admin/games" in r.headers["location"]
+
+    def test_delete_missing_csrf_rejected(self, admin_client, db):
+        client, admin = admin_client
+        game = create_game(db, name="Protected Game", added_by_id=admin.id)
+        r = client.post(
+            f"/admin/games/{game.id}/delete",
+            data={},
+            follow_redirects=False,
+        )
+        assert r.status_code == 403
+        db.expire_all()
+        assert db.get(Game, game.id) is not None
+
+    def test_regular_user_cannot_delete(self, auth_client, db):
+        client, user = auth_client
+        game = create_game(db, name="Surviving Game", added_by_id=user.id)
+        resp = client.get("/")
+        csrf = extract_csrf(resp.text)
+        r = client.post(
+            f"/admin/games/{game.id}/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=False,
+        )
+        assert r.status_code == 303
+        assert "/admin" not in r.headers.get("location", "")
+        db.expire_all()
+        assert db.get(Game, game.id) is not None
+
+    def test_flash_message_after_delete(self, admin_client, db):
+        client, admin = admin_client
+        game = create_game(db, name="Flash Test Game", added_by_id=admin.id)
+        csrf = _get_admin_games_csrf(client)
+        r = client.post(
+            f"/admin/games/{game.id}/delete",
+            data={"csrf_token": csrf},
+            follow_redirects=True,
+        )
+        assert "Flash Test Game" in r.text or "deleted" in r.text.lower()
