@@ -11,7 +11,7 @@ from app.config import settings
 from app.database import SessionLocal
 from app.limiter import limiter
 from app.models import InviteToken
-from app.routers import admin, auth_routes, feature_requests, scoreboard
+from app.routers import admin, auth_routes, feature_requests, scoreboard, theme
 
 BASE_DIR = Path(__file__).resolve().parent
 
@@ -76,3 +76,4 @@ app.include_router(auth_routes.router)
 app.include_router(scoreboard.router)
 app.include_router(admin.router)
 app.include_router(feature_requests.router)
+app.include_router(theme.router)
