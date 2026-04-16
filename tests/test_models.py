@@ -1,7 +1,5 @@
 """Unit tests for ORM model properties (app/models.py)."""
-import pytest
 
-from tests.conftest import _TestingSession
 from app.models import InviteToken
 
 

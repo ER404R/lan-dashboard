@@ -44,7 +44,7 @@ from app.auth import hash_password
 from app.database import Base
 from app.dependencies import get_db
 from app.main import app
-from app.models import FeatureRequest, Game, InviteToken, Score, User
+from app.models import Game, InviteToken, User
 
 # ---------------------------------------------------------------------------
 # Override get_db so every route handler also uses the test session factory

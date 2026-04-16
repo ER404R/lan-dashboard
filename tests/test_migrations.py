@@ -2,7 +2,6 @@
 import logging
 
 import sqlalchemy as sa
-import pytest
 from alembic import command
 from alembic.config import Config
 

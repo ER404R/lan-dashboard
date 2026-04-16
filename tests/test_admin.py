@@ -1,5 +1,4 @@
 """Tests for the admin routes (app/routers/admin.py)."""
-import pytest
 
 from tests.conftest import extract_csrf
 from app.models import InviteToken

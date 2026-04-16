@@ -1,7 +1,6 @@
 """Tests for the feature-request routes."""
-import pytest
 
-from tests.conftest import create_user, extract_csrf
+from tests.conftest import extract_csrf
 
 
 # ---------------------------------------------------------------------------

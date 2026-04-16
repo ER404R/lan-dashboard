@@ -1,5 +1,4 @@
 """Tests for authentication routes (login, register, logout)."""
-import pytest
 from tests.conftest import (
     create_invite_token,
     create_user,
