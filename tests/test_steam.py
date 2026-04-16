@@ -2,7 +2,7 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from app.steam import search_steam_games, STEAM_SEARCH_URL
+from app.steam import search_steam_games
 
 
 class TestSearchSteamGames:

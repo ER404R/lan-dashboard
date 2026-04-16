@@ -30,3 +30,28 @@ The app is exposed on port 80/443 via Nginx. The Docker image is pulled from `gh
 | `POSTGRES_DB` | PostgreSQL database name (used by the `db` service) |
 | `POSTGRES_USER` | PostgreSQL username (used by the `db` service) |
 | `POSTGRES_PASSWORD` | PostgreSQL password (used by the `db` service) |
+
+## CI & Quality Gates
+
+Every pull request against `main` must pass the CI pipeline before merging:
+
+| Gate | What it checks |
+|---|---|
+| `ruff check .` | Undefined names (`F821`), unused imports (`F401`), redefined names (`F811`), syntax errors (`E9xx`) |
+| `pytest` | Full test suite including an import smoke test that verifies every `app/` module loads cleanly |
+
+### Running locally
+
+```bash
+# Lint
+pip install ruff
+ruff check .
+
+# Tests
+pip install -r requirements-dev.txt
+pytest
+```
+
+### Branch protection
+
+The `main` branch requires the **CI** workflow to pass. Direct pushes without passing checks are blocked. This applies to all PRs — human-authored, agent-generated, and bundled.

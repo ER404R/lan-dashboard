@@ -1,5 +1,4 @@
 """Unit tests for app/auth.py — hash_password and verify_password."""
-import pytest
 
 from app.auth import hash_password, verify_password
 

@@ -1,0 +1,14 @@
+[tool.ruff]
+target-version = "py312"
+# Only lint the project code, not .venv or alembic migrations
+include = ["app/**/*.py", "tests/**/*.py"]
+
+[tool.ruff.lint]
+# Enable pyflakes (F) rules and syntax-error rules (E9)
+select = ["F", "E9"]
+# Key rules now active:
+#   F821 - undefined name
+#   F401 - unused import
+#   F811 - redefinition of unused name
+#   E901 - syntax error
+#   E999 - syntax error (compilation failure)

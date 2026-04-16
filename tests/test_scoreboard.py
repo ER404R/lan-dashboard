@@ -1,9 +1,7 @@
 """Tests for the scoreboard routes (game listing, adding, rating, ownership)."""
-import pytest
 
 from tests.conftest import (
     create_game,
-    create_user,
     extract_csrf,
 )
 
